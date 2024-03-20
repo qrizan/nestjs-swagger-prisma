@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
@@ -37,8 +36,8 @@ export class CreateGameDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  genreId: number;
+  @IsString()
+  genreId: string;
 
   @IsOptional()
   @IsString()

@@ -54,10 +54,10 @@ export class GenreService {
     };
   }
 
-  async deleteGenreById(id: number) {
+  async deleteGenreById(id: string) {
     const checkGenreExists = await this.prisma.genre.findFirst({
       where: {
-        id: Number(id),
+        id: id,
         deletedAt: null,
       },
     });
@@ -66,7 +66,7 @@ export class GenreService {
       const deleteDataGenreById = await this.prisma.genre.update({
         data: { deletedAt: new Date() },
         where: {
-          id: Number(id),
+          id: id,
         },
       });
 

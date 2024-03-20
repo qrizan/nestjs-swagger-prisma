@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateGameDto {
   @ApiProperty()
@@ -39,8 +33,8 @@ export class UpdateGameDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  genreId: number;
+  @IsString()
+  genreId: string;
 
   @IsString()
   @IsNotEmpty()

@@ -3,7 +3,9 @@ import { faker } from '@faker-js/faker';
 import slugify from 'slugify';
 import { hash } from 'bcrypt';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['error'],
+});
 
 async function main() {
   const capitalizeWords = (str) => {
@@ -16,48 +18,53 @@ async function main() {
   };
 
   const PASSWORD = await hash('Password123!', 12);
-  const NUMBER_OF_GAMES = 30;
-  const NUMBER_OF_USERS = 10;
-  const GENRES = [
-    {
-      name: 'Action',
-      slug: 'action',
-    },
-    {
-      name: 'First-Person Shooter',
-      slug: 'first-person-shooter',
-    },
-    {
-      name: 'Third-Person Shooter',
-      slug: 'third-person-shooter',
-    },
-  ];
+  const NUMBER_OF_GAMES = 20;
+  const NUMBER_OF_USERS = 30;
+  const NUMBER_OF_CATEGORIES = 5;
 
   try {
     // delete all dataset
     await prisma.genre.deleteMany();
-    await prisma.user.deleteMany();
+    await prisma.bookmarksOnUsers.deleteMany();
     await prisma.game.deleteMany();
-    await prisma.boorkmarksOnUsers.deleteMany();
+    await prisma.user.deleteMany();
 
     /* ADMINISTRATOR */
     // create administrator user
-    await prisma.user.create({
+    const createAdministrator = await prisma.user.create({
       data: {
         username: 'administrator',
         password: PASSWORD,
         email: 'admin@example.com',
+        avatar: '/uploads/avatar/default.png',
         role: 'ADMINISTRATOR',
       },
     });
+    console.info('> create administrator');
+    console.table(createAdministrator);
 
     /* GENRE */
+    // generate data dummy for users
+    const dataCategories = () => {
+      const name = faker.word.noun();
+      return {
+        name: capitalizeWords(name),
+        slug: slugify(name, { lower: true }),
+      };
+    };
+
+    const dataCategoriesDummy: any[] = faker.helpers.multiple(dataCategories, {
+      count: NUMBER_OF_CATEGORIES,
+    });
 
     // create data genres
-    await prisma.genre.createMany({
-      data: GENRES,
+    const createGenres = await prisma.genre.createMany({
+      data: dataCategoriesDummy,
       skipDuplicates: true,
     });
+
+    console.info('> create genres');
+    console.table(createGenres);
 
     /* GAMES */
     // collect genre id
@@ -81,7 +88,7 @@ async function main() {
       return {
         title: capitalizeWords(title),
         slug: slugify(title, { lower: true }),
-        content: faker.lorem.paragraphs(5, '<br/>'),
+        content: faker.lorem.paragraphs(5, '\n\n'),
         imageUrl: faker.image.url(),
         genreId: genreIds[Math.floor(Math.random() * genreIds.length)], // random genre id
         releaseDate: faker.date.past(),
@@ -93,10 +100,13 @@ async function main() {
       count: NUMBER_OF_GAMES,
     });
 
-    await prisma.game.createMany({
+    const createGames = await prisma.game.createMany({
       data: dataGamesDummy,
       skipDuplicates: true,
     });
+
+    console.info('> create games');
+    console.table(createGames);
 
     /* USER */
     // generate data dummy for users
@@ -113,10 +123,13 @@ async function main() {
       count: NUMBER_OF_USERS,
     });
 
-    await prisma.user.createMany({
+    const createUsers = await prisma.user.createMany({
       data: dataUsersDummy,
       skipDuplicates: true,
     });
+
+    console.info('> create users');
+    console.table(createUsers);
 
     /* BOOKMARK */
 
@@ -149,14 +162,24 @@ async function main() {
     const gameBookmark = [];
     await gamesResult.map((game) => {
       getUsersRandom(usersResult).map((user) => {
-        gameBookmark.push({ gameId: game.id, userId: user.id });
+        gameBookmark.push({
+          gameId: game.id,
+          userId: user.id,
+          createdAt: faker.date.between({
+            from: '2023-01-01T00:00:00.000Z',
+            to: new Date(),
+          }),
+        });
       });
     });
 
-    await prisma.boorkmarksOnUsers.createMany({
+    const createBookmarks = await prisma.bookmarksOnUsers.createMany({
       data: gameBookmark,
       skipDuplicates: true,
     });
+
+    console.info('> create bookmarks');
+    console.table(createBookmarks);
 
     console.log(`Database has been seeded. 🚀`);
   } catch (e) {

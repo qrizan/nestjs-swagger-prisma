@@ -9,7 +9,7 @@ export class BookmarkService {
   async toggleBookmark(userId: string, gameId: string) {
     gameId = sanitizeHtml(gameId).trim();
 
-    const checkBookmarkExists = await this.prisma.boorkmarksOnUsers.findFirst({
+    const checkBookmarkExists = await this.prisma.bookmarksOnUsers.findFirst({
       where: {
         userId: userId,
         gameId: gameId,
@@ -19,7 +19,7 @@ export class BookmarkService {
     let bookmarkGame;
 
     if (checkBookmarkExists) {
-      await this.prisma.boorkmarksOnUsers.delete({
+      await this.prisma.bookmarksOnUsers.delete({
         where: {
           id: checkBookmarkExists.id,
         },
@@ -27,7 +27,7 @@ export class BookmarkService {
 
       bookmarkGame = 'Succesfully delete';
     } else {
-      await this.prisma.boorkmarksOnUsers.create({
+      await this.prisma.bookmarksOnUsers.create({
         data: {
           userId: userId,
           gameId: gameId,

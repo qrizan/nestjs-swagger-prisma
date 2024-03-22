@@ -73,6 +73,11 @@ export class AuthService {
       return {
         statusCode: 200,
         accessToken,
+        user: {
+          username: checkUserExists.username,
+          email: checkUserExists.email,
+          avatar: checkUserExists.avatar,
+        },
         message: 'Login successfull',
       };
     }

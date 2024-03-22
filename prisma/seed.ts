@@ -18,8 +18,8 @@ async function main() {
   };
 
   const PASSWORD = await hash('Password123!', 12);
-  const NUMBER_OF_GAMES = 20;
-  const NUMBER_OF_USERS = 30;
+  const NUMBER_OF_GAMES = 30;
+  const NUMBER_OF_USERS = 50;
   const NUMBER_OF_CATEGORIES = 5;
 
   try {
@@ -44,8 +44,8 @@ async function main() {
     console.table(createAdministrator);
 
     /* GENRE */
-    // generate data dummy for users
-    const dataCategories = () => {
+    // generate data dummy for genres
+    const dataGenres = () => {
       const name = faker.word.noun();
       return {
         name: capitalizeWords(name),
@@ -53,13 +53,13 @@ async function main() {
       };
     };
 
-    const dataCategoriesDummy: any[] = faker.helpers.multiple(dataCategories, {
+    const dataGenresDummy: any[] = faker.helpers.multiple(dataGenres, {
       count: NUMBER_OF_CATEGORIES,
     });
 
     // create data genres
     const createGenres = await prisma.genre.createMany({
-      data: dataCategoriesDummy,
+      data: dataGenresDummy,
       skipDuplicates: true,
     });
 

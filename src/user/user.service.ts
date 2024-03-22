@@ -5,18 +5,27 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getUsers(page: number, keyword: string) {
-    const limit = 5;
-    const offset = Number(page ? (page - 1) * limit : 0);
+  async getUsers(page: number, keyword?: string) {
+    const limit = 10;
+    const offset = ((Number(page) || 1) - 1) * limit;
 
     const [total, users] = await this.prisma.$transaction([
-      this.prisma.user.count(),
+      this.prisma.user.count({
+        where: {
+          username: {
+            contains: keyword,
+            mode: 'insensitive',
+          },
+          deletedAt: null,
+        },
+      }),
       this.prisma.user.findMany({
         skip: offset,
         take: limit,
         where: {
           username: {
             contains: keyword,
+            mode: 'insensitive',
           },
           deletedAt: null,
         },
@@ -32,10 +41,11 @@ export class UserService {
       }),
     ]);
 
-    page = Number(page ? page : 1);
+    page = page && page > 0 ? Number(page) : 1;
     return {
       statusCode: HttpStatus.OK,
-      data: { page, limit, total, users },
+      data: users,
+      pagination: { page, limit, total },
     };
   }
 

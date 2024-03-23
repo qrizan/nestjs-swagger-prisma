@@ -114,7 +114,7 @@ async function main() {
       return {
         username: faker.person.firstName(),
         email: faker.internet.email(),
-        avatar: '/uploads/avatar/default.png',
+        avatar: `/uploads/avatar/pravatar-${Math.floor(Math.random() * 15)}.jpeg`,
         password: PASSWORD,
       };
     };

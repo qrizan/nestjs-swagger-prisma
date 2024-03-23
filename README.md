@@ -17,7 +17,7 @@
 > $ pnpm install
 
 #### JWT configuration
-- generat secret key
+- generate secret key
 > $ openssl rand -base64 32
 - jwt config file
 > src/utils/jwt.config.ts

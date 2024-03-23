@@ -9,6 +9,11 @@ import {
   Query,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
@@ -17,7 +22,16 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Reflector } from '@nestjs/core';
 import { Roles } from 'src/roles/roles.decorator';
-import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiBearerAuth('accessToken')
 @ApiTags('Administrator')
@@ -71,6 +85,51 @@ export class GameController {
     @Body() body: UpdateGameDto,
   ) {
     return await this.gameService.updateGameById(req.user.id, id, body);
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Roles(['ADMINISTRATOR'])
+  @Post('image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: 'public/uploads/image',
+        filename: (req, file, cb) => {
+          const suffix = Date.now() + Math.round(Math.random() * 1e9);
+          cb(null, suffix + '.' + file.originalname.split('.').pop());
+        },
+      }),
+    }),
+  )
+  async image(
+    @Req() req,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1000000 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const protocol = req.protocol;
+    const host = req.get('Host');
+    return {
+      url: `${protocol}://${host}/uploads/image/${file.filename}`,
+    };
   }
 
   @Roles(['ADMINISTRATOR'])

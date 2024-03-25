@@ -11,6 +11,9 @@ export class DashboardService {
     const getUsers = await this.prisma.user.findMany({
       where: {
         deletedAt: null,
+        NOT: {
+          role: 'ADMINISTRATOR',
+        },
       },
       take: 5,
       select: {
@@ -21,7 +24,7 @@ export class DashboardService {
         createdAt: true,
       },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: 'desc',
       },
     });
 

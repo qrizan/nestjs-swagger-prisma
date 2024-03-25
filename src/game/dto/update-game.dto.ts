@@ -36,6 +36,7 @@ export class UpdateGameDto {
   @IsString()
   genreId: string;
 
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   userId: string;

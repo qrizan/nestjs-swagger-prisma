@@ -116,6 +116,10 @@ async function main() {
         email: faker.internet.email(),
         avatar: `/uploads/avatar/pravatar-${Math.floor(Math.random() * 15)}.jpeg`,
         password: PASSWORD,
+        createdAt: faker.date.between({
+          from: '2023-01-01T00:00:00.000Z',
+          to: new Date(),
+        }),
       };
     };
 
@@ -132,7 +136,6 @@ async function main() {
     console.table(createUsers);
 
     /* BOOKMARK */
-
     // collect user ids
     const usersResult = await prisma.user.findMany({
       where: {

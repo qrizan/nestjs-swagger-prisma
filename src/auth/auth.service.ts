@@ -77,6 +77,7 @@ export class AuthService {
           username: checkUserExists.username,
           email: checkUserExists.email,
           avatar: checkUserExists.avatar,
+          role: checkUserExists.role,
         },
         message: 'Login successfull',
       };

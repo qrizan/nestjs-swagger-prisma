@@ -29,6 +29,7 @@ export class ProfileService {
           select: {
             game: {
               select: {
+                id: true,
                 title: true,
                 slug: true,
                 imageUrl: true,

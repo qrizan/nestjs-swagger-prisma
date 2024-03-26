@@ -75,12 +75,14 @@ export class DashboardService {
     );
 
     return {
-      users: getUsersCount,
-      games: getGamesCount,
-      categories: getGenresCount,
-      bookmarks: getBookmarksCount,
-      latestUser: getUsers,
-      gamesBookmarked: bookmarkedLastYear,
+      data: {
+        users: getUsersCount,
+        games: getGamesCount,
+        categories: getGenresCount,
+        bookmarks: getBookmarksCount,
+        latestUser: getUsers,
+        gamesBookmarked: bookmarkedLastYear,
+      },
     };
   }
 }

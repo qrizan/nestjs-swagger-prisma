@@ -15,11 +15,6 @@ export class PublicService {
         title: true,
         slug: true,
         imageUrl: true,
-        bookmarkedBy: {
-          select: {
-            userId: true,
-          },
-        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -48,11 +43,6 @@ export class PublicService {
             title: true,
             slug: true,
             imageUrl: true,
-            bookmarkedBy: {
-              select: {
-                userId: true,
-              },
-            },
           },
         },
       },
@@ -81,11 +71,6 @@ export class PublicService {
           select: {
             name: true,
             slug: true,
-          },
-        },
-        bookmarkedBy: {
-          select: {
-            userId: true,
           },
         },
       },

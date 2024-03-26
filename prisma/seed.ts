@@ -18,8 +18,8 @@ async function main() {
   };
 
   const PASSWORD = await hash('Password123!', 12);
-  const NUMBER_OF_GAMES = 30;
-  const NUMBER_OF_USERS = 50;
+  const NUMBER_OF_GAMES = 100;
+  const NUMBER_OF_USERS = 500;
   const NUMBER_OF_CATEGORIES = 5;
 
   try {

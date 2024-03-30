@@ -1,23 +1,29 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from 'src/profile/dto/update-user.dto';
 import * as sanitizeHtml from 'sanitize-html';
 import { hash } from 'bcrypt';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProfileService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserProfile(id: string) {
+  async getUserProfile(id: string, cursor: string) {
+    const LIMIT = 4;
+
+    let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
+
+    if (cursor && cursor != 'undefined') {
+      cursor = sanitizeHtml(cursor).trim();
+      cursorOptions = {
+        createdAt: { lt: new Date(cursor) },
+      };
+    }
+
     const getDataUserById = await this.prisma.user.findFirst({
       where: {
         id: id,
-        deletedAt: null,
       },
       select: {
         id: true,
@@ -26,6 +32,18 @@ export class ProfileService {
         avatar: true,
         createdAt: true,
         bookmarks: {
+          take: LIMIT + 1,
+          where: {
+            game: {
+              deletedAt: null,
+              ...cursorOptions,
+            },
+          },
+          orderBy: {
+            game: {
+              createdAt: 'desc',
+            },
+          },
           select: {
             game: {
               select: {
@@ -33,6 +51,12 @@ export class ProfileService {
                 title: true,
                 slug: true,
                 imageUrl: true,
+                createdAt: true,
+                genre: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -40,13 +64,17 @@ export class ProfileService {
       },
     });
 
-    if (!getDataUserById) {
-      throw new NotFoundException();
+    let nextCursor = null;
+    if (getDataUserById.bookmarks.length > LIMIT) {
+      nextCursor =
+        getDataUserById.bookmarks[LIMIT - 1].game.createdAt.toISOString();
+      getDataUserById.bookmarks.pop();
     }
 
     return {
       statusCode: HttpStatus.OK,
       data: getDataUserById,
+      nextCursor: nextCursor,
     };
   }
 

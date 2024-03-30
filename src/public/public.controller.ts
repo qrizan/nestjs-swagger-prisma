@@ -1,15 +1,19 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PublicService } from './public.service';
-import { ApiTags, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Public')
 @Controller('public')
 export class PublicController {
   constructor(private publicService: PublicService) {}
 
-  @Get('games')
-  async getAllGames() {
-    return await this.publicService.getAllGames();
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+  })
+  @Get('games/?')
+  async getAllGames(@Query('cursor') cursor: string) {
+    return await this.publicService.getAllGames(cursor);
   }
 
   @Get('game/:slug')
@@ -20,11 +24,15 @@ export class PublicController {
     return await this.publicService.getGameBySlug(slug);
   }
 
-  @Get('genre/:slug')
+  @Get('genre/:slug/?')
   @ApiParam({
     name: 'slug',
   })
-  async getGenreBySlug(@Param('slug') slug) {
-    return await this.publicService.getGenreBySlug(slug);
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+  })
+  async getGenreBySlug(@Param('slug') slug, @Query('cursor') cursor: string) {
+    return await this.publicService.getGenreBySlug(slug, cursor);
   }
 }

@@ -50,6 +50,10 @@ async function main() {
       return {
         name: capitalizeWords(name),
         slug: slugify(name, { lower: true }),
+        createdAt: faker.date.between({
+          from: '2023-01-01T00:00:00.000Z',
+          to: new Date(),
+        }),
       };
     };
 
@@ -93,6 +97,10 @@ async function main() {
         genreId: genreIds[Math.floor(Math.random() * genreIds.length)], // random genre id
         releaseDate: faker.date.past(),
         userId: adminResult.id, // administrator userId
+        createdAt: faker.date.between({
+          from: '2023-01-01T00:00:00.000Z',
+          to: new Date(),
+        }),
       };
     };
 

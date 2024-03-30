@@ -6,8 +6,8 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async getUsers(page: number, keyword?: string) {
-    const limit = 10;
-    const offset = ((Number(page) || 1) - 1) * limit;
+    const LIMIT = 10;
+    const offset = ((Number(page) || 1) - 1) * LIMIT;
 
     const [total, users] = await this.prisma.$transaction([
       this.prisma.user.count({
@@ -21,7 +21,7 @@ export class UserService {
       }),
       this.prisma.user.findMany({
         skip: offset,
-        take: limit,
+        take: LIMIT,
         where: {
           username: {
             contains: keyword,
@@ -45,7 +45,7 @@ export class UserService {
     return {
       statusCode: HttpStatus.OK,
       data: users,
-      pagination: { page, limit, total },
+      pagination: { page, LIMIT, total },
     };
   }
 

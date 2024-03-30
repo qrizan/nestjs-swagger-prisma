@@ -12,6 +12,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Query,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,7 +22,13 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Reflector } from '@nestjs/core';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiBearerAuth('accessToken')
 @ApiTags('User')
@@ -31,9 +38,13 @@ export class ProfileController {
   constructor(private profileService: ProfileService) {}
 
   @Roles(['USER'])
-  @Get()
-  async getUserProfile(@Req() req) {
-    return await this.profileService.getUserProfile(req.user.id);
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+  })
+  @Get('?')
+  async getUserProfile(@Req() req, @Query('cursor') cursor: string) {
+    return await this.profileService.getUserProfile(req.user.id, cursor);
   }
 
   @Roles(['USER'])

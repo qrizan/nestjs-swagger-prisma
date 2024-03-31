@@ -12,10 +12,11 @@ export class ProfileService {
   async getUserProfile(id: string, cursor: string) {
     const LIMIT = 4;
 
-    let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
+    let cursorOptions: Prisma.BookmarksOnUsersWhereInput | undefined =
+      undefined;
 
     if (cursor && cursor != 'undefined') {
-      cursor = sanitizeHtml(cursor).trim();
+      cursor = cursor.trim();
       cursorOptions = {
         createdAt: { lt: new Date(cursor) },
       };
@@ -34,17 +35,16 @@ export class ProfileService {
         bookmarks: {
           take: LIMIT + 1,
           where: {
+            ...cursorOptions,
             game: {
               deletedAt: null,
-              ...cursorOptions,
             },
           },
           orderBy: {
-            game: {
-              createdAt: 'desc',
-            },
+            createdAt: 'desc',
           },
           select: {
+            createdAt: true,
             game: {
               select: {
                 id: true,
@@ -66,8 +66,7 @@ export class ProfileService {
 
     let nextCursor = null;
     if (getDataUserById.bookmarks.length > LIMIT) {
-      nextCursor =
-        getDataUserById.bookmarks[LIMIT - 1].game.createdAt.toISOString();
+      nextCursor = getDataUserById.bookmarks[LIMIT - 1].createdAt.toISOString();
       getDataUserById.bookmarks.pop();
     }
 

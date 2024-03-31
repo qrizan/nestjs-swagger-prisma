@@ -1,13 +1,23 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as sanitizeHtml from 'sanitize-html';
 
 @Injectable()
 export class BookmarkService {
   constructor(private prisma: PrismaService) {}
 
   async toggleBookmark(userId: string, gameId: string) {
-    gameId = sanitizeHtml(gameId).trim();
+    gameId = gameId.trim();
+
+    const checkUserExists = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        deletedAt: null,
+      },
+    });
+
+    if (!checkUserExists) {
+      throw new UnauthorizedException();
+    }
 
     const checkBookmarkExists = await this.prisma.bookmarksOnUsers.findFirst({
       where: {

@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as sanitizeHtml from 'sanitize-html';
 
 @Injectable()
 export class PublicService {
@@ -12,7 +11,7 @@ export class PublicService {
     let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
 
     if (cursor && cursor != 'undefined') {
-      cursor = sanitizeHtml(cursor).trim();
+      cursor = cursor.trim();
       cursorOptions = {
         createdAt: { lt: new Date(cursor) },
       };
@@ -55,13 +54,13 @@ export class PublicService {
   }
 
   async getGenreBySlug(slug: string, cursor: string) {
-    slug = sanitizeHtml(slug).trim();
+    slug = slug.trim();
     const LIMIT = 4;
 
     let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
 
     if (cursor && cursor != 'undefined') {
-      cursor = sanitizeHtml(cursor).trim();
+      cursor = cursor.trim();
       cursorOptions = {
         createdAt: { lt: new Date(cursor) },
       };
@@ -120,7 +119,7 @@ export class PublicService {
   }
 
   async getGameBySlug(slug: string) {
-    slug = sanitizeHtml(slug).trim();
+    slug = slug.trim();
 
     const getDataGameBySlug = await this.prisma.game.findFirst({
       where: {

@@ -44,7 +44,7 @@ model Game {
   genreId      String?
   genre        Genre?              @relation(fields: [genreId], references: [id])
   bookmarkedBy BookmarksOnUsers[]
-  createdAt    DateTime            @default(now())
+  createdAt    DateTime            @unique() @default(now())
   updatedAt    DateTime            @updatedAt
   deletedAt    DateTime?
 }

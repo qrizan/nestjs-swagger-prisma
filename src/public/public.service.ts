@@ -6,8 +6,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class PublicService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllGames(cursor: string) {
-    const LIMIT = 4;
+  async getAllGames(cursor: string, keyword: string) {
+    const LIMIT = 10;
     let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
 
     if (cursor && cursor != 'undefined') {
@@ -20,6 +20,10 @@ export class PublicService {
     const getDataAllGames = await this.prisma.game.findMany({
       take: LIMIT + 1,
       where: {
+        title: {
+          contains: keyword,
+          mode: 'insensitive',
+        },
         deletedAt: null,
         ...cursorOptions,
       },
@@ -55,7 +59,7 @@ export class PublicService {
 
   async getGenreBySlug(slug: string, cursor: string) {
     slug = slug.trim();
-    const LIMIT = 4;
+    const LIMIT = 10;
 
     let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
 
@@ -137,6 +141,23 @@ export class PublicService {
           select: {
             name: true,
             slug: true,
+          },
+        },
+        _count: {
+          select: {
+            bookmarkedBy: true,
+          },
+        },
+        bookmarkedBy: {
+          take: 10,
+          select: {
+            user: {
+              select: {
+                username: true,
+                avatar: true,
+                createdAt: true,
+              },
+            },
           },
         },
       },

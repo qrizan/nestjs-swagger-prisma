@@ -11,9 +11,16 @@ export class PublicController {
     name: 'cursor',
     required: false,
   })
-  @Get('games/?')
-  async getAllGames(@Query('cursor') cursor: string) {
-    return await this.publicService.getAllGames(cursor);
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+  })
+  @Get('games')
+  async getAllGames(
+    @Query('cursor') cursor: string,
+    @Query('keyword') keyword: string,
+  ) {
+    return await this.publicService.getAllGames(cursor, keyword);
   }
 
   @Get('game/:slug')

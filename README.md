@@ -25,6 +25,10 @@
 
 https://github.com/qrizan/react-shadcn-redux
 
+- user and public
+
+https://github.com/qrizan/nextjs-chakra-reactquery
+
 ### setup
 
 #### install dependencies

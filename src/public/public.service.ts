@@ -33,6 +33,7 @@ export class PublicService {
         slug: true,
         imageUrl: true,
         createdAt: true,
+        updatedAt: true,
         genre: {
           select: {
             name: true,

@@ -44,8 +44,8 @@ export class GameService {
   }
 
   async getGames(page: number, keyword: string) {
-    const LIMIT = 10;
-    const offset = ((Number(page) || 1) - 1) * LIMIT;
+    const limit = 10;
+    const offset = ((Number(page) || 1) - 1) * limit;
 
     const [total, games] = await this.prisma.$transaction([
       this.prisma.game.count({
@@ -59,7 +59,7 @@ export class GameService {
       }),
       this.prisma.game.findMany({
         skip: offset,
-        take: LIMIT,
+        take: limit,
         where: {
           title: {
             contains: keyword,
@@ -98,7 +98,7 @@ export class GameService {
     return {
       statusCode: HttpStatus.OK,
       data: games,
-      pagination: { page, LIMIT, total },
+      pagination: { page, limit, total },
     };
   }
 
@@ -122,8 +122,8 @@ export class GameService {
 
   async updateGameById(userId: string, id: string, data: UpdateGameDto) {
     data.title ? (data.title = sanitizeHtml(data.title).trim()) : null;
-    data.slug ? (data.slug = slugify(data.title, { lower: true })) : null;
     data.content ? (data.content = sanitizeHtml(data.content)) : null;
+    data.slug = slugify(data.title, { lower: true });
     data.userId = userId;
 
     const checkGameExists = await this.prisma.game.findFirst({

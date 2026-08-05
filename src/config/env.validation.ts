@@ -5,9 +5,19 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Matches,
   MinLength,
+  ValidateIf,
   validateSync,
 } from 'class-validator';
+
+/**
+ * Origin dipisah koma, masing-masing hanya skema + host + port opsional.
+ * Garis miring di ujung sengaja ditolak: browser mengirim header `Origin`
+ * tanpa garis miring, jadi `https://app.example.com/` tidak akan pernah cocok
+ * dan gejalanya cuma request yang diblokir tanpa pesan apa pun.
+ */
+const ORIGIN_LIST = /^https?:\/\/[^\s/]+(,https?:\/\/[^\s/]+)*$/;
 
 class EnvironmentVariables {
   @IsString()
@@ -30,6 +40,15 @@ class EnvironmentVariables {
   @IsInt({ message: 'must be an integer' })
   @IsPositive({ message: 'must be greater than 0' })
   PORT: number = 3000;
+
+  // Kosong atau tidak diisi berarti CORS mati, sama seperti default Nest.
+  @ValidateIf((env: EnvironmentVariables) => !!env.CORS_ORIGINS)
+  @IsString()
+  @Matches(ORIGIN_LIST, {
+    message:
+      'must be a comma-separated list of origins without a trailing slash, e.g. https://app.example.com,http://localhost:5173',
+  })
+  CORS_ORIGINS?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -1,0 +1,25 @@
+# Bentuk allowlist: semua diabaikan lebih dulu, lalu hanya yang benar-benar dibutuhkan build yang dibuka kembali. 
+# Dipilih dengan sengaja supaya file baru tidak ikut ke dalam image cuma karena lupa ditambahkan ke daftar larangan.
+# Syarat dan cara verifikasinya: S-04 di ../games-catalog/SECURE.md
+*
+
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!nest-cli.json
+!tsconfig.json
+!tsconfig.build.json
+!src
+!prisma
+!public
+
+# Dikecualikan lagi dari direktori yang sudah dibuka di atas.
+# Spec ikut ter-copy kalau tidak disebut, meski tsconfig.build.json tidak mengompilasinya.
+src/**/*.spec.ts
+
+# .env tidak akan lolos lewat `*` di atas, tapi ditulis eksplisit karena ini
+# yang paling berbahaya: @prisma/client memuat .env relatif terhadap prisma/schema.prisma, bukan cwd, 
+# sehingga isinya akan menimpa env yang di-inject saat runtime tanpa peringatan apa pun.
+.env
+.env.*
+prisma/.env

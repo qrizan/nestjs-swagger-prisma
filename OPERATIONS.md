@@ -34,6 +34,15 @@ Semua config dibaca dari environment variable. Untuk development lokal, isi file
 | `JWT_SECRET` | **ya** | tidak ada | Minimal 32 karakter. Generate dengan `openssl rand -base64 32` |
 | `JWT_EXPIRES_IN` | tidak | `3600` | Expiry access token, dalam detik |
 | `PORT` | tidak | `3000` | Port HTTP |
+| `CORS_ORIGINS` | tidak | kosong | Origin yang boleh memanggil API dari browser, dipisah koma |
+
+`CORS_ORIGINS` opsional bagi aplikasi, tapi **wajib diisi kalau API dipanggil dari browser**. Dikosongkan berarti CORS mati dan request lintas origin diblokir. Formatnya skema + host + port, tanpa garis miring di ujung, karena browser mengirim header `Origin` tanpa garis miring:
+
+```
+CORS_ORIGINS="https://admin.example.com,https://katalog.example.com"
+```
+
+Format yang salah menolak start, sama seperti variable wajib lainnya.
 
 Aplikasi **fail fast**: kalau variable wajib tidak ada atau tidak valid, aplikasi menolak start dan menyebut variable mana yang bermasalah.
 
@@ -129,6 +138,7 @@ Tiga perilaku di-test manual karena butuh kontrol atas proses aplikasinya. Perin
 | Aplikasi exit waktu start sambil menyebut nama variable | Config tidak lengkap. Isi variable yang disebut. Ini perilaku yang disengaja |
 | `/health/ready` `503` tapi `/health/live` tetap `200` | Database tidak terjangkau. Aplikasinya sehat. Cek database dan networking-nya |
 | Upload gambar ditolak `400` padahal filenya gambar | Isi file tidak sesuai format PNG atau JPEG. Cek dengan `file <nama-file>`, bukan dari ekstensinya |
+| Frontend kena CORS error padahal `curl` ke endpoint yang sama berhasil | `CORS_ORIGINS` belum memuat origin frontend tersebut, atau ada garis miring di ujungnya. `curl` tidak menegakkan CORS, jadi keberhasilannya bukan bukti |
 | `pnpm test:e2e` gagal di `$connect()` | E2E test me-load seluruh aplikasi, jadi butuh PostgreSQL hidup |
 | `node: command not found` waktu menjalankan script | Shell non-interactive tidak load nvm. Jalankan `source ~/.nvm/nvm.sh && nvm use` |
 | `ERR_PNPM_UNEXPECTED_STORE` | Jalankan `export XDG_DATA_HOME="$HOME/.local/share"` dulu |

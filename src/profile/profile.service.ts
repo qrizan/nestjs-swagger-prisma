@@ -4,6 +4,7 @@ import { UpdateUserDto } from 'src/profile/dto/update-user.dto';
 import * as sanitizeHtml from 'sanitize-html';
 import { hash } from 'bcrypt';
 import { Prisma } from '@prisma/client';
+import { parseCursor } from 'src/utils/cursor';
 
 @Injectable()
 export class ProfileService {
@@ -12,15 +13,9 @@ export class ProfileService {
   async getUserProfile(id: string, cursor: string) {
     const LIMIT = 4;
 
-    let cursorOptions: Prisma.BookmarksOnUsersWhereInput | undefined =
-      undefined;
-
-    if (cursor && cursor != 'undefined') {
-      cursor = cursor.trim();
-      cursorOptions = {
-        createdAt: { lt: new Date(cursor) },
-      };
-    }
+    const cursorDate = parseCursor(cursor);
+    const cursorOptions: Prisma.BookmarksOnUsersWhereInput | undefined =
+      cursorDate ? { createdAt: { lt: cursorDate } } : undefined;
 
     const getDataUserById = await this.prisma.user.findFirst({
       where: {

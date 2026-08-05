@@ -3,7 +3,19 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/../src/$1"
+  },
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.ts$": "ts-jest",
+    "^.+\\.js$": [
+      "babel-jest",
+      {
+        "presets": [["@babel/preset-env", { "targets": { "node": "current" } }]]
+      }
+    ]
+  },
+  "transformIgnorePatterns": [
+    "node_modules/\\.pnpm/(?!(dom-serializer|domelementtype|domhandler|domutils|entities|htmlparser2|nanoid)@)"
+  ]
 }

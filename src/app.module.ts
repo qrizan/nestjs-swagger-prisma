@@ -12,9 +12,16 @@ import { AuthModule } from './auth/auth.module';
 import { GenreModule } from './genre/genre.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ConfigModule } from '@nestjs/config';
+import { validate } from './config/env.validation';
+import { HealthModule } from './health/health.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true, cache: true, validate }),
+    HealthModule,
+    MetricsModule,
     GameModule,
     PrismaModule,
     UserModule,
@@ -25,7 +32,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     AuthModule,
     GenreModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'public'),
+      rootPath: join(__dirname, '..', 'public'),
     }),
   ],
   controllers: [AppController],

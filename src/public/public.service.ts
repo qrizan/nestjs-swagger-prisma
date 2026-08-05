@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { parseCursor } from 'src/utils/cursor';
 
 @Injectable()
 export class PublicService {
@@ -8,14 +9,10 @@ export class PublicService {
 
   async getAllGames(cursor: string, keyword: string) {
     const LIMIT = 10;
-    let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
-
-    if (cursor && cursor != 'undefined') {
-      cursor = cursor.trim();
-      cursorOptions = {
-        createdAt: { lt: new Date(cursor) },
-      };
-    }
+    const cursorDate = parseCursor(cursor);
+    const cursorOptions: Prisma.GameWhereInput | undefined = cursorDate
+      ? { createdAt: { lt: cursorDate } }
+      : undefined;
 
     const getDataAllGames = await this.prisma.game.findMany({
       take: LIMIT + 1,
@@ -62,24 +59,15 @@ export class PublicService {
     slug = slug.trim();
     const LIMIT = 10;
 
-    let cursorOptions: Prisma.GameWhereInput | undefined = undefined;
-
-    if (cursor && cursor != 'undefined') {
-      cursor = cursor.trim();
-      cursorOptions = {
-        createdAt: { lt: new Date(cursor) },
-      };
-    }
+    const cursorDate = parseCursor(cursor);
+    const cursorOptions: Prisma.GameWhereInput | undefined = cursorDate
+      ? { createdAt: { lt: cursorDate } }
+      : undefined;
 
     const getDataGenres = await this.prisma.genre.findMany({
       where: {
         slug: slug,
         deletedAt: null,
-        game: {
-          some: {
-            ...cursorOptions,
-          },
-        },
       },
       select: {
         id: true,
@@ -103,11 +91,16 @@ export class PublicService {
             createdAt: 'desc',
           },
           where: {
+            deletedAt: null,
             ...cursorOptions,
           },
         },
       },
     });
+
+    if (getDataGenres.length === 0) {
+      throw new NotFoundException();
+    }
 
     let nextCursor = null;
     if (getDataGenres[0].game.length > LIMIT) {

@@ -4,7 +4,7 @@ import { AuthController } from './auth.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConfig } from 'src/utils/jwt.config';
+import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from 'src/utils/jwt.strategy';
 
 @Module({
@@ -15,11 +15,14 @@ import { JwtStrategy } from 'src/utils/jwt.strategy';
       property: 'user',
       session: false,
     }),
-    JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: {
-        expiresIn: jwtConfig.expired,
-      },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: config.get<number>('JWT_EXPIRES_IN'),
+        },
+      }),
     }),
   ],
   providers: [AuthService, JwtStrategy],

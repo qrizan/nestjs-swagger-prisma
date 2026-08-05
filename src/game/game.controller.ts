@@ -12,8 +12,6 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
-  FileTypeValidator,
-  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
@@ -30,8 +28,9 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { saveImage } from 'src/utils/image-upload';
 
 @ApiBearerAuth('accessToken')
 @ApiTags('Administrator')
@@ -103,32 +102,22 @@ export class GameController {
   @Post('image')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: 'public/uploads/image',
-        filename: (req, file, cb) => {
-          const suffix = Date.now() + Math.round(Math.random() * 1e9);
-          cb(null, suffix + '.' + file.originalname.split('.').pop());
-        },
-      }),
+      // Batas ditegakkan multer, sebelum apa pun ditulis ke disk.
+      storage: memoryStorage(),
+      limits: { fileSize: 1000000 },
     }),
   )
   async image(
     @Req() req,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 1000000 }),
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
     file: Express.Multer.File,
   ) {
+    const filename = await saveImage(file.buffer, 'public/uploads/image');
+
     const protocol = req.protocol;
     const host = req.get('Host');
     return {
-      url: `${protocol}://${host}/uploads/image/${file.filename}`,
+      url: `${protocol}://${host}/uploads/image/${filename}`,
     };
   }
 

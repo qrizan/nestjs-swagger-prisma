@@ -10,14 +10,13 @@ import {
   UseInterceptors,
   UseGuards,
   ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   Query,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { saveImage } from 'src/utils/image-upload';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { RolesGuard } from 'src/roles/roles.guard';
@@ -69,31 +68,21 @@ export class ProfileController {
   @Post('avatar')
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: 'public/uploads/avatar',
-        filename: (req, file, cb) => {
-          const suffix = Date.now() + Math.round(Math.random() * 1e9);
-          cb(null, suffix + '.' + file.originalname.split('.').pop());
-        },
-      }),
+      // Batas ditegakkan multer, sebelum apa pun ditulis ke disk.
+      storage: memoryStorage(),
+      limits: { fileSize: 500000 },
     }),
   )
   async avatar(
     @Req() req,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 500000 }),
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
     file: Express.Multer.File,
   ) {
+    const filename = await saveImage(file.buffer, 'public/uploads/avatar');
+
     return await this.profileService.uploadAvatar(
       req.user.id,
-      '/uploads/avatar/' + file.filename,
+      '/uploads/avatar/' + filename,
     );
   }
 

@@ -4,7 +4,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { compare, hash } from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConfig } from 'src/utils/jwt.config';
 import * as sanitizeHtml from 'sanitize-html';
 
 @Injectable()
@@ -90,9 +89,6 @@ export class AuthService {
   }
 
   generateJWT(payload: any) {
-    return this.jwtService.sign(payload, {
-      secret: jwtConfig.secret,
-      expiresIn: jwtConfig.expired,
-    });
+    return this.jwtService.sign(payload);
   }
 }

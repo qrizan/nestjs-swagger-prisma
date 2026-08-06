@@ -121,10 +121,17 @@ export class GameService {
   }
 
   async updateGameById(userId: string, id: string, data: UpdateGameDto) {
-    data.title ? (data.title = sanitizeHtml(data.title).trim()) : null;
     data.content ? (data.content = sanitizeHtml(data.content)) : null;
-    data.slug = slugify(data.title, { lower: true });
     data.userId = userId;
+
+    // Slug selalu berasal dari title, tidak pernah dari klien. Patch tanpa
+    // title karena itu mempertahankan slug yang tersimpan.
+    if (data.title) {
+      data.title = sanitizeHtml(data.title).trim();
+      data.slug = slugify(data.title, { lower: true });
+    } else {
+      delete data.slug;
+    }
 
     const checkGameExists = await this.prisma.game.findFirst({
       where: {

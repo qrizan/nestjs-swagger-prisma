@@ -212,6 +212,16 @@ t "GET /profile tanpa token" 401 "$BASE/profile"
 t "GET /profile token palsu" 401 "$BASE/profile" -H "Authorization: Bearer palsu.palsu.palsu"
 t "GET /profile token USER" 200 "$BASE/profile" -H "Authorization: Bearer $UT"
 t "GET /game (admin-only) token USER" 403 "$BASE/game" -H "Authorization: Bearer $UT"
+
+# Properti di luar DTO tidak boleh sampai ke database: akun yang mendaftar
+# sambil mengirim `role` tetap harus berperan USER, jadi endpoint admin menolak.
+EEMAIL="smoke-esc-$STAMP@example.com"
+curl -s -o /dev/null -X POST "$BASE/auth/register" -H 'Content-Type: application/json' \
+  -d "{\"username\":\"smokeesc\",\"email\":\"$EEMAIL\",\"password\":\"Str0ng!Passw0rd\",\"role\":\"ADMINISTRATOR\"}"
+ET=$(curl -s -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$EEMAIL\",\"password\":\"Str0ng!Passw0rd\"}" | j 'd.accessToken')
+t "GET /user token akun yang mendaftar dengan role admin" 403 "$BASE/user" -H "Authorization: Bearer $ET"
+
 t "GET /game token ADMIN" 200 "$BASE/game" -H "Authorization: Bearer $AT"
 t "GET /user (admin-only) token USER" 403 "$BASE/user" -H "Authorization: Bearer $UT"
 t "GET /user token ADMIN" 200 "$BASE/user" -H "Authorization: Bearer $AT"

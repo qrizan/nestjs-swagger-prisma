@@ -9,6 +9,13 @@ ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 WORKDIR /app
 RUN corepack enable
 
+# Prisma memilih query engine dari versi libssl yang terdeteksi saat generate.
+# Tanpa paket openssl deteksinya jatuh ke debian-openssl-1.1.x, sedangkan
+# runtime memakai 3.0.x, dan aplikasi gagal saat bootstrap.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl \
+ && rm -rf /var/lib/apt/lists/*
+
 # schema.prisma disalin sebelum install karena postinstall @prisma/client
 # menjalankan `prisma generate` dan membacanya dari sana.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

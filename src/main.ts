@@ -7,7 +7,10 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const env = app.get(ConfigService);
-  app.useGlobalPipes(new ValidationPipe());
+  // `whitelist` membuang properti yang tidak dideklarasikan di DTO. Tanpa itu
+  // properti asing ikut sampai ke Prisma dan menulis kolom yang tidak pernah
+  // dibuka lewat DTO, misalnya `role` pada User.
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   // Daftar origin dibaca dari env; kosong berarti CORS tetap mati seperti
   // default Nest.

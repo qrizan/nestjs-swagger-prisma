@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from 'src/profile/dto/update-user.dto';
 import * as sanitizeHtml from 'sanitize-html';
@@ -20,6 +25,7 @@ export class ProfileService {
     const getDataUserById = await this.prisma.user.findFirst({
       where: {
         id: id,
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -58,6 +64,11 @@ export class ProfileService {
         },
       },
     });
+
+    // Token bisa saja masih berlaku setelah akunnya dihapus.
+    if (!getDataUserById) {
+      throw new NotFoundException();
+    }
 
     let nextCursor = null;
     if (getDataUserById.bookmarks.length > LIMIT) {
@@ -136,6 +147,7 @@ export class ProfileService {
     const checkUserExists = await this.prisma.user.findFirst({
       where: {
         id: id,
+        deletedAt: null,
       },
     });
     if (checkUserExists) {

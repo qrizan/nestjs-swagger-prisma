@@ -237,28 +237,28 @@ echo "═══ 5. PUBLIC (tanpa auth) ═══"
 t "GET /public/games" 200 "$BASE/public/games"
 t "GET /public/games?keyword=…" 200 "$BASE/public/games?keyword=a"
 t "GET /public/games?cursor=undefined (klien lama)" 200 "$BASE/public/games?cursor=undefined"
-t "GET /public/games?cursor=ngawur [F-10]" 400 "$BASE/public/games?cursor=ngawur"
+t "GET /public/games?cursor=ngawur" 400 "$BASE/public/games?cursor=ngawur"
 t "GET /public/game/:slug tak dikenal" 404 "$BASE/public/game/tidak-ada-slug-ini"
-t "GET /public/genre/:slug tak dikenal [F-10]" 404 "$BASE/public/genre/tidak-ada-slug-ini"
+t "GET /public/genre/:slug tak dikenal" 404 "$BASE/public/genre/tidak-ada-slug-ini"
 t "GET /public/genre/:slug (ada)" 200 "$BASE/public/genre/$GSLUG"
-t "GET /public/genre/:slug?cursor=ngawur [F-10]" 400 "$BASE/public/genre/$GSLUG?cursor=ngawur"
-t "GET /public/genre/:slug halaman kosong [F-10]" 200 "$BASE/public/genre/$GSLUG?cursor=2000-01-01T00:00:00.000Z"
+t "GET /public/genre/:slug?cursor=ngawur" 400 "$BASE/public/genre/$GSLUG?cursor=ngawur"
+t "GET /public/genre/:slug halaman kosong" 200 "$BASE/public/genre/$GSLUG?cursor=2000-01-01T00:00:00.000Z"
 
 echo "═══ 6. UNGGAH BERKAS ═══"
-t "POST /game/image (PNG sah) [F-14]" 201 -X POST "$BASE/game/image" \
+t "POST /game/image (PNG sah)" 201 -X POST "$BASE/game/image" \
   -H "Authorization: Bearer $AT" -F "image=@$FIXTURES/sah.png"
-t "POST /profile/avatar (JPEG sah) [F-14]" 201 -X POST "$BASE/profile/avatar" \
+t "POST /profile/avatar (JPEG sah)" 201 -X POST "$BASE/profile/avatar" \
   -H "Authorization: Bearer $UT" -F "avatar=@$FIXTURES/sah.jpg"
-t "POST /game/image tanpa berkas [F-10]" 400 -X POST "$BASE/game/image" \
+t "POST /game/image tanpa berkas" 400 -X POST "$BASE/game/image" \
   -H "Authorization: Bearer $AT" -F "dummy=1"
-t "POST /game/image HTML menyamar png [F-15]" 400 -X POST "$BASE/game/image" \
+t "POST /game/image HTML menyamar png" 400 -X POST "$BASE/game/image" \
   -H "Authorization: Bearer $AT" -F "image=@$FIXTURES/xss.html;type=image/png"
 t "POST /profile/avatar 2MB (batas 500KB)" 413 -X POST "$BASE/profile/avatar" \
   -H "Authorization: Bearer $UT" -F "avatar=@$FIXTURES/besar.png"
 
-# Inti F-15: berkas yang ditolak tidak boleh mendarat di disk sama sekali.
+# Berkas yang ditolak tidak boleh mendarat di disk.
 HTML_TERTULIS=$(find "$UPLOAD_IMAGE_DIR" "$UPLOAD_AVATAR_DIR" -maxdepth 1 -name '*.html' 2>/dev/null | wc -l)
-check "tidak ada berkas .html di direktori upload [F-15]" "$HTML_TERTULIS" "0"
+check "tidak ada berkas .html di direktori upload" "$HTML_TERTULIS" "0"
 
 echo "═══ 7. BOOKMARK & PROFIL ═══"
 t "GET /bookmark/:game_id (tambah)" 200 "$BASE/bookmark/$GAMEID" -H "Authorization: Bearer $UT"
@@ -272,7 +272,7 @@ t "DELETE /game/:id" 200 -X DELETE "$BASE/game/$GAMEID" -H "Authorization: Beare
 HIT=$(curl -s "$BASE/public/games?keyword=ZZ%20Smoke%20Game%20$STAMP" | j 'd.data.length')
 check "game terhapus hilang dari /public/games" "${HIT:-?}" "0"
 HIT_GENRE=$(curl -s "$BASE/public/genre/$GSLUG" | j 'd.data[0].game.length')
-check "game terhapus hilang dari per-genre [F-16]" "${HIT_GENRE:-?}" "0"
+check "game terhapus hilang dari per-genre" "${HIT_GENRE:-?}" "0"
 
 echo "═══ 9. KARDINALITAS METRIK ═══"
 # Label route wajib berupa POLA rute. Kalau ada URL mentah, satu slug = satu

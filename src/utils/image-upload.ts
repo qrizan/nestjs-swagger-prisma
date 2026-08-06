@@ -3,11 +3,7 @@ import { randomUUID } from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 
-/**
- * Ekstensi berkas ditentukan dari isi berkas, tidak pernah dari nama yang
- * dikirim klien. Nama dari klien pernah membuat `.html` mendarat di direktori
- * yang disajikan statis, lalu disajikan sebagai `text/html` — stored XSS.
- */
+/** Ekstensi ditentukan dari isi berkas, bukan dari nama yang dikirim klien. */
 const IMAGE_SIGNATURES = [
   { ext: 'png', magic: [0x89, 0x50, 0x4e, 0x47] },
   { ext: 'jpg', magic: [0xff, 0xd8, 0xff] },
@@ -25,11 +21,7 @@ function imageExtension(buffer: Buffer): string {
   return signature.ext;
 }
 
-/**
- * Menulis gambar ke disk hanya setelah isinya diperiksa. Berbeda dari
- * `diskStorage`, yang menulis lebih dulu lalu memvalidasi — berkas yang ditolak
- * pun tetap mendarat.
- */
+/** Menulis ke disk hanya setelah isi berkas diperiksa. Nama berkas dari server. */
 export async function saveImage(
   buffer: Buffer,
   directory: string,

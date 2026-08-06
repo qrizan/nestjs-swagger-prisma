@@ -1,12 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 
 /**
- * Cursor paginasi berupa tanggal ISO-8601. Nilai yang tidak bisa diurai
- * sebelumnya diteruskan ke Prisma sebagai `Invalid Date` dan muncul sebagai
- * 500, bukan 400.
- *
- * String `'undefined'` diterima sebagai "tanpa cursor" karena klien memang
- * pernah mengirimkannya apa adanya.
+ * Cursor paginasi berupa tanggal ISO-8601. Nilai kosong dan string
+ * `'undefined'` diperlakukan sebagai tanpa cursor; sisanya yang tidak bisa
+ * diurai ditolak dengan 400.
  */
 export function parseCursor(cursor: string): Date | undefined {
   if (!cursor || cursor === 'undefined') {

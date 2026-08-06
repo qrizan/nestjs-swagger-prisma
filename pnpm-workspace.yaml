@@ -8,9 +8,10 @@ allowBuilds:
 
 engineStrict: true
 
-# @nestjs/platform-express@10.4.22 memin multer ke 2.0.2, dan 10.4.22 adalah
-# rilis terakhir seri 10.x. Advisory DoS multer baru tertutup di 2.2.0, jadi
-# versi yang dipakai FileInterceptor harus dipaksa dari sini. Hapus override
-# ini kalau sudah pindah ke Nest 11, yang sudah memin 2.2.0 sendiri.
+# Dependency transitif yang versinya dipin paket induk, dinaikkan ke versi yang
+# sudah memuat perbaikan keamanan. js-yaml ditahan di jalur 4.x agar tidak
+# menyeberang mayor.
 overrides:
   multer: ^2.2.0
+  lodash: ^4.18.1
+  js-yaml: ^4.3.1

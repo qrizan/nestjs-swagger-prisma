@@ -12,18 +12,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Semua action dipin ke commit SHA, bukan tag. Tag dapat dipindahkan pemiliknya
-# kapan saja, dan workflow ini berjalan dengan GITHUB_TOKEN. Komentar versi di
-# sebelahnya dipertahankan supaya tetap terbaca manusia, dan Dependabot bisa
-# memperbaruinya otomatis. Lihat S-20 di ../games-catalog/SECURE.md
+# Action dipin ke commit SHA; komentar versi di sebelahnya untuk keterbacaan.
 
 jobs:
   verify:
     runs-on: ubuntu-latest
 
     # e2e memuat seluruh AppModule, sehingga PrismaService.onModuleInit
-    # menjalankan $connect() saat app.init(). Tanpa Postgres yang benar-benar
-    # hidup, e2e gagal sebelum satu endpoint pun disentuh. Lihat F-12.
+    # menjalankan $connect() saat app.init() dan butuh Postgres yang hidup.
     services:
       postgres:
         image: postgres:16
@@ -41,9 +37,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://games:games@localhost:5432/games?schema=public
-      # Bukan secret. Validasi env hanya mensyaratkan minimal 32 karakter, dan
-      # memakai SHA commit menghindari menuliskan string yang menyerupai secret
-      # ke dalam repo — supaya scanner secret tidak menemukan umpan palsu.
+      # Nilai uji. Validasi env hanya mensyaratkan minimal 32 karakter.
       JWT_SECRET: ${{ github.sha }}
 
     steps:
@@ -60,11 +54,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        # `lint:ci`, bukan `lint`. Script `lint` memanggil eslint dengan --fix,
-        # yang di CI berarti masalah diperbaiki diam-diam lalu dibuang bersama
-        # runner — gate-nya lolos atas pekerjaan yang tidak pernah sampai ke
-        # repo. `lint:ci` melaporkan tanpa memperbaiki, dan `--max-warnings 0`
-        # membuat warning ikut menggagalkan.
+        # `lint:ci` melaporkan tanpa memperbaiki; `lint` memakai --fix dan tidak
+        # cocok untuk gate.
         run: pnpm lint:ci
 
       - name: Build
@@ -79,19 +70,7 @@ jobs:
       - name: E2E test
         run: pnpm test:e2e
 
-      - name: Audit dependency produksi
-        # Ambang sengaja di `critical`, bukan `high`.
-        #
-        # Keadaan terukur 2026-08-05: 11 advisory, 0 critical, 2 high. Dua yang
-        # high adalah `lodash` dan `js-yaml`, dan keduanya sudah berada di versi
-        # terbaru — belum ada patch di versi mana pun. Sisanya terikat pada
-        # mayor NestJS 10.
-        #
-        # Ambang `high` karena itu akan membuat gate ini lahir dalam keadaan
-        # merah, dan gate yang selalu merah akan dibiasakan di-bypass sampai
-        # kehilangan makna. Ambang `critical` bisa ditegakkan sungguhan hari ini
-        # dan tetap menangkap kelas masalah yang nyata: F-13 adalah CVE critical
-        # pada `tar` lewat rantai `bcrypt`.
-        #
-        # Menaikkan ke `high` menunggu keputusan upgrade NestJS 10 → 11.
-        run: pnpm audit --prod --audit-level critical
+      - name: Audit production dependencies
+        # Ambang `high`. Advisory moderate yang tersisa terikat mayor NestJS 10
+        # dan baru bisa ditutup lewat upgrade mayor.
+        run: pnpm audit --prod --audit-level high

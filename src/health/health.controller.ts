@@ -17,10 +17,9 @@ export class HealthController {
   ) {}
 
   /**
-   * Liveness sengaja **tidak** menyentuh database. Kalau ia ikut memeriksa DB,
-   * satu gangguan Postgres akan me-restart seluruh pod serentak — memperparah
-   * insiden, bukan memulihkannya. Yang dijawab di sini hanya: proses ini masih
-   * bisa melayani request atau tidak.
+   * Liveness tidak menyentuh database. Yang dijawab hanya apakah proses ini
+   * masih bisa melayani request, sehingga gangguan database tidak memicu
+   * restart pod.
    */
   @Get('live')
   @HealthCheck()

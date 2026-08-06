@@ -12,10 +12,8 @@ import {
 } from 'class-validator';
 
 /**
- * Origin dipisah koma, masing-masing hanya skema + host + port opsional.
- * Garis miring di ujung sengaja ditolak: browser mengirim header `Origin`
- * tanpa garis miring, jadi `https://app.example.com/` tidak akan pernah cocok
- * dan gejalanya cuma request yang diblokir tanpa pesan apa pun.
+ * Origin dipisah koma, masing-masing hanya skema, host, dan port opsional.
+ * Garis miring di ujung ditolak agar cocok dengan header `Origin` dari browser.
  */
 const ORIGIN_LIST = /^https?:\/\/[^\s/]+(,https?:\/\/[^\s/]+)*$/;
 

@@ -12,13 +12,8 @@ export class MetricsMiddleware implements NestMiddleware {
     res.on('finish', () => {
       const labels = {
         method: req.method,
-        /**
-         * **Pola** rute (`/public/genre/:slug`), tidak pernah URL mentah.
-         * URL mentah membuat setiap slug jadi time series baru dan
-         * meledakkan kardinalitas Prometheus. Request yang tidak cocok
-         * dengan rute mana pun dikumpulkan di satu label, bukan dibiarkan
-         * memakai path-nya sendiri.
-         */
+        // Pola rute (`/public/genre/:slug`), bukan URL mentah, agar jumlah
+        // time series tetap terbatas. Request tanpa rute cocok masuk satu label.
         route: req.route?.path ?? 'unmatched',
         status: String(res.statusCode),
       };

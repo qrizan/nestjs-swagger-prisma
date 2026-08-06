@@ -9,9 +9,8 @@ async function bootstrap() {
   const env = app.get(ConfigService);
   app.useGlobalPipes(new ValidationPipe());
 
-  // Nest mematikan CORS secara default, jadi tanpa ini setiap request browser
-  // dari origin lain diblokir dan preflight-nya balas 404. Daftar origin datang
-  // dari env supaya tidak ada hostname yang di-bake ke image.
+  // Daftar origin dibaca dari env; kosong berarti CORS tetap mati seperti
+  // default Nest.
   const corsOrigins = (env.get<string>('CORS_ORIGINS') ?? '')
     .split(',')
     .map((origin) => origin.trim())
@@ -27,8 +26,8 @@ async function bootstrap() {
     });
   }
 
-  // Tanpa ini SIGTERM langsung mematikan proses dan memutus request yang
-  // sedang berjalan — rolling update dan scale-down HPA jadi error spike.
+  // Menyelesaikan request yang sedang berjalan sebelum proses keluar saat
+  // menerima SIGTERM.
   app.enableShutdownHooks();
 
   const config = new DocumentBuilder()

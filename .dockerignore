@@ -16,6 +16,9 @@
 # Spec ikut ter-copy kalau tidak disebut, meski tsconfig.build.json tidak mengompilasinya.
 src/**/*.spec.ts
 
+# Seed hanya dipakai saat pengembangan dan bergantung pada dev dependency.
+prisma/seed.ts
+
 # Sudah tertutup oleh `*`, ditulis ulang eksplisit karena dampaknya paling besar:
 # @prisma/client memuat .env relatif terhadap prisma/schema.prisma, bukan cwd,
 # sehingga .env yang ikut ke image akan menimpa env yang di-inject saat runtime.

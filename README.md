@@ -101,6 +101,14 @@ bash scripts/smoke.sh       # terminal 2
 
 Penjelasannya ada di [OPERATIONS.md](OPERATIONS.md#verifikasi).
 
+## Container image
+
+```
+ghcr.io/qrizan/nestjs-swagger-prisma:<versi>
+```
+
+Tag versi dibuat dari git tag `v*.*.*`, tanpa tag `latest`. Cara menjalankan, env yang dibutuhkan, dan cara menjalankan migration dari image ada di [OPERATIONS.md](OPERATIONS.md#container-image).
+
 ## Dokumentasi API
 
 Swagger UI: http://localhost:3000/openapi

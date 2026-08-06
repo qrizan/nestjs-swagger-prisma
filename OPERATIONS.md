@@ -2,7 +2,7 @@
 
 Dokumen ini menjelaskan cara menjalankan aplikasi, config yang dibutuhkan, dan cara memverifikasi aplikasi berjalan benar.
 
-Aplikasi dijalankan dengan Node di satu mesin, dengan PostgreSQL terpisah.
+Aplikasi bisa dijalankan langsung dengan Node, atau dari container image. Keduanya butuh PostgreSQL terpisah.
 
 ## Requirement
 
@@ -23,6 +23,38 @@ pnpm start:prod
 ```
 
 Aplikasi listen di port `3000`, atau sesuai env `PORT`.
+
+## Container image
+
+Image di-publish ke GitHub Container Registry:
+
+```
+ghcr.io/qrizan/nestjs-swagger-prisma:<versi>
+```
+
+Tag versi berasal dari git tag `v*.*.*`, jadi tiap image bisa ditelusuri ke satu commit. **Tidak ada tag `latest`** — deployment merujuk versi atau digest. Tiap image disertai SBOM dan provenance, dan ditandatangani dengan cosign keyless lewat OIDC GitHub Actions.
+
+Tidak ada hostname atau URL yang di-*bake* ke dalam image. Semua config dibaca dari environment variable waktu container start, jadi image yang sama dipakai di semua environment.
+
+```bash
+docker run -d --name games-api -p 3000:3000 \
+  -e DATABASE_URL='postgresql://user:pass@host:5432/games?schema=public' \
+  -e JWT_SECRET='<minimal 32 karakter>' \
+  ghcr.io/qrizan/nestjs-swagger-prisma:0.0.1-rc.4
+```
+
+Image sudah punya `HEALTHCHECK` bawaan yang memanggil `/health/live` dengan http module Node, jadi tidak perlu `curl` atau `wget` di dalam image.
+
+Migration dijalankan dari image yang sama, sehingga versi CLI Prisma dijamin cocok dengan schema yang di-deploy:
+
+```bash
+docker run --rm \
+  -e DATABASE_URL='postgresql://user:pass@host:5432/games?schema=public' \
+  ghcr.io/qrizan/nestjs-swagger-prisma:0.0.1-rc.4 \
+  node_modules/.bin/prisma migrate deploy
+```
+
+Container jalan sebagai UID `1000` non-root. Upload ditulis ke `/app/public/uploads`; kalau file upload perlu bertahan, mount volume ke path itu.
 
 ## Environment variable
 
@@ -117,13 +149,15 @@ pnpm start:prod          # terminal 1
 bash scripts/smoke.sh    # terminal 2
 ```
 
-`scripts/smoke.sh` menjalankan 51 check terhadap aplikasi yang sedang berjalan: health, metrics, auth beserta jalur gagalnya, role guard, CRUD administrator, endpoint public, upload file, bookmark, dan soft delete. Script bikin data sungguhan lalu menghapusnya lagi, dan exit dengan code selain `0` kalau ada yang gagal.
+`scripts/smoke.sh` menjalankan 52 check terhadap aplikasi yang sedang berjalan: health, metrics, auth beserta jalur gagalnya, role guard, CRUD administrator, endpoint public, upload file, bookmark, dan soft delete. Script bikin data sungguhan lalu menghapusnya lagi, dan exit dengan code selain `0` kalau ada yang gagal.
 
 Untuk test ke host lain:
 
 ```bash
 BASE_URL=http://10.0.0.5:3000 bash scripts/smoke.sh
 ```
+
+Script ini juga dipakai untuk memverifikasi container image, bukan cuma proses lokal. Waktu target-nya container, mount `public/uploads` dari host ke `/app/public/uploads`, karena pemeriksaan direktori upload membaca direktori di host.
 
 Tiga perilaku di-test manual karena butuh kontrol atas proses aplikasinya. Perintahnya ada di komentar header script:
 

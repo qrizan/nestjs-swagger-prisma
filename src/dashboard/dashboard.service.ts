@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { StorageService } from 'src/storage/storage.service';
 import { monthShortNames } from 'src/utils/utils';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageService,
+  ) {}
 
   async dashboard() {
     const getUsers = await this.prisma.user.findMany({
@@ -80,7 +84,10 @@ export class DashboardService {
         games: getGamesCount,
         categories: getGenresCount,
         bookmarks: getBookmarksCount,
-        latestUser: getUsers,
+        latestUser: getUsers.map((user) => ({
+          ...user,
+          avatar: this.storage.publicUrl(user.avatar),
+        })),
         gamesBookmarked: bookmarkedLastYear,
       },
     };

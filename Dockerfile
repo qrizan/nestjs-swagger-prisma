@@ -64,8 +64,9 @@ COPY --from=builder --chown=1000:1000 /app/dist ./dist
 COPY --from=builder --chown=1000:1000 /app/prisma ./prisma
 COPY --from=builder --chown=1000:1000 /app/package.json ./package.json
 
-# Upload menulis ke public/uploads saat runtime, termasuk membuat direktorinya.
-COPY --chown=1000:1000 public ./public
+# Satu-satunya berkas statis yang masih dipakai: diunggah ke object storage saat start
+# kalau objeknya belum ada. Sisa isi public/ hanya aset seed, dipakai dari repo.
+COPY --chown=1000:1000 public/uploads/avatar/default.png ./public/uploads/avatar/default.png
 
 # UID numerik agar `runAsNonRoot` di Kubernetes dapat memverifikasinya.
 USER 1000:1000

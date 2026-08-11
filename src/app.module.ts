@@ -10,8 +10,6 @@ import { PublicModule } from './public/public.module';
 import { ProfileModule } from './profile/profile.module';
 import { AuthModule } from './auth/auth.module';
 import { GenreModule } from './genre/genre.module';
-import { join } from 'path';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation';
 import { HealthModule } from './health/health.module';
@@ -31,9 +29,6 @@ import { MetricsModule } from './metrics/metrics.module';
     ProfileModule,
     AuthModule,
     GenreModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-    }),
   ],
   controllers: [AppController],
   providers: [AppService],

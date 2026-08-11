@@ -16,7 +16,7 @@ import { ProfileService } from './profile.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { saveImage } from 'src/utils/image-upload';
+import { StorageService } from 'src/storage/storage.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { RolesGuard } from 'src/roles/roles.guard';
@@ -34,7 +34,10 @@ import {
 @UseGuards(AuthGuard, new RolesGuard(new Reflector()))
 @Controller('profile')
 export class ProfileController {
-  constructor(private profileService: ProfileService) {}
+  constructor(
+    private profileService: ProfileService,
+    private storage: StorageService,
+  ) {}
 
   @Roles(['USER'])
   @ApiQuery({
@@ -68,7 +71,7 @@ export class ProfileController {
   @Post('avatar')
   @UseInterceptors(
     FileInterceptor('avatar', {
-      // Batas ditegakkan multer, sebelum apa pun ditulis ke disk.
+      // Batas ditegakkan multer, sebelum berkas diunggah ke object storage.
       storage: memoryStorage(),
       limits: { fileSize: 500000 },
     }),
@@ -78,12 +81,9 @@ export class ProfileController {
     @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
     file: Express.Multer.File,
   ) {
-    const filename = await saveImage(file.buffer, 'public/uploads/avatar');
+    const key = await this.storage.upload(file.buffer, 'avatar');
 
-    return await this.profileService.uploadAvatar(
-      req.user.id,
-      '/uploads/avatar/' + filename,
-    );
+    return await this.profileService.uploadAvatar(req.user.id, key);
   }
 
   @Roles(['USER'])

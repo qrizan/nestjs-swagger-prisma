@@ -2,10 +2,62 @@ import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import slugify from 'slugify';
 import { hash } from 'bcrypt';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 const prisma = new PrismaClient({
   log: ['error'],
 });
+
+const AVATAR_DIR = join(__dirname, '..', 'public', 'uploads', 'avatar');
+const AVATAR_FILES = [
+  'default.png',
+  ...Array.from({ length: 15 }, (_, index) => `pravatar-${index + 1}.jpeg`),
+];
+
+const S3_ENV = [
+  'S3_ENDPOINT',
+  'S3_REGION',
+  'S3_BUCKET',
+  'S3_ACCESS_KEY_ID',
+  'S3_SECRET_ACCESS_KEY',
+];
+
+/**
+ * Seed jalan dari host, jadi endpoint S3 harus di-publish ke loopback lebih dulu
+ * oleh stack Compose. Kunci objek sengaja memakai nama berkas aslinya supaya
+ * baris pengguna bisa menunjuknya tanpa menunggu hasil unggahan.
+ */
+async function uploadAvatars() {
+  const missing = S3_ENV.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    throw new Error(`Missing environment variables: ${missing.join(', ')}`);
+  }
+
+  const s3 = new S3Client({
+    endpoint: process.env.S3_ENDPOINT,
+    region: process.env.S3_REGION,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    },
+  });
+
+  for (const file of AVATAR_FILES) {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: `avatar/${file}`,
+        Body: await readFile(join(AVATAR_DIR, file)),
+        ContentType: file.endsWith('.png') ? 'image/png' : 'image/jpeg',
+      }),
+    );
+  }
+
+  console.info(`> upload ${AVATAR_FILES.length} avatar`);
+}
 
 async function main() {
   const capitalizeWords = (str) => {
@@ -29,6 +81,8 @@ async function main() {
     await prisma.game.deleteMany();
     await prisma.user.deleteMany();
 
+    await uploadAvatars();
+
     /* ADMINISTRATOR */
     // create administrator user
     const createAdministrator = await prisma.user.create({
@@ -36,7 +90,7 @@ async function main() {
         username: 'administrator',
         password: PASSWORD,
         email: 'admin@example.com',
-        avatar: '/uploads/avatar/default.png',
+        avatar: 'avatar/default.png',
         role: 'ADMINISTRATOR',
       },
     });
@@ -122,7 +176,7 @@ async function main() {
       return {
         username: faker.person.firstName(),
         email: faker.internet.email(),
-        avatar: `/uploads/avatar/pravatar-${Math.floor(Math.random() * 15)}.jpeg`,
+        avatar: `avatar/pravatar-${1 + Math.floor(Math.random() * 15)}.jpeg`,
         password: PASSWORD,
         createdAt: faker.date.between({
           from: '2023-01-01T00:00:00.000Z',
@@ -194,7 +248,7 @@ async function main() {
 
     console.log(`Database has been seeded. 🚀`);
   } catch (e) {
-    throw Error;
+    throw e;
   }
 }
 

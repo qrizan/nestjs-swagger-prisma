@@ -1,9 +1,13 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageService,
+  ) {}
 
   async getUsers(page: number, keyword?: string) {
     const LIMIT = 10;
@@ -44,7 +48,10 @@ export class UserService {
     page = page && page > 0 ? Number(page) : 1;
     return {
       statusCode: HttpStatus.OK,
-      data: users,
+      data: users.map((user) => ({
+        ...user,
+        avatar: this.storage.publicUrl(user.avatar),
+      })),
       pagination: { page, LIMIT, total },
     };
   }
@@ -68,7 +75,12 @@ export class UserService {
 
     return {
       statusCode: HttpStatus.OK,
-      data: getDataUserById,
+      data: getDataUserById
+        ? {
+            ...getDataUserById,
+            avatar: this.storage.publicUrl(getDataUserById.avatar),
+          }
+        : null,
     };
   }
 }

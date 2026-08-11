@@ -140,3 +140,35 @@ jobs:
         env:
           IMAGE: ${{ env.IMAGE }}
           DIGEST: ${{ steps.push.outputs.digest }}
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: cd-token
+        with:
+          app-id: ${{ vars.CD_APP_ID }}
+          private-key: ${{ secrets.CD_APP_PRIVATE_KEY }}
+          # token diminta untuk repo orkestrasi, bukan untuk repo ini
+          owner: ${{ github.repository_owner }}
+          repositories: games-catalog
+
+      - name: Trigger CD di repo orkestrasi
+        # Dijalankan setelah sign, sehingga yang di-dispatch hanya image yang
+        # sudah ditandatangani. GITHUB_TOKEN bawaan tidak memicu workflow run di
+        # repo lain, jadi dispatch ini memakai token instalasi GitHub App.
+        env:
+          GH_TOKEN: ${{ steps.cd-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          APP_REPO: ${{ github.event.repository.name }}
+          GIT_TAG: ${{ github.ref_name }}
+          IMAGE_TAG: ${{ steps.meta.outputs.version }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          jq -n \
+            --arg repo "$APP_REPO" \
+            --arg git_tag "$GIT_TAG" \
+            --arg image_tag "$IMAGE_TAG" \
+            --arg digest "$DIGEST" \
+            '{event_type: "app-released",
+              client_payload: {repo: $repo, git_tag: $git_tag,
+                               image_tag: $image_tag, digest: $digest}}' \
+            | gh api "repos/${OWNER}/games-catalog/dispatches" --input -
+          echo "OK: dispatch app-released terkirim untuk $APP_REPO $GIT_TAG"

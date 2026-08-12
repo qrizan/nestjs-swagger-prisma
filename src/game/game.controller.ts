@@ -30,14 +30,17 @@ import {
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { saveImage } from 'src/utils/image-upload';
+import { StorageService } from 'src/storage/storage.service';
 
 @ApiBearerAuth('accessToken')
 @ApiTags('Administrator')
 @UseGuards(AuthGuard, new RolesGuard(new Reflector()))
 @Controller('game')
 export class GameController {
-  constructor(private gameService: GameService) {}
+  constructor(
+    private gameService: GameService,
+    private storage: StorageService,
+  ) {}
 
   @Roles(['ADMINISTRATOR'])
   @Post()
@@ -102,22 +105,20 @@ export class GameController {
   @Post('image')
   @UseInterceptors(
     FileInterceptor('image', {
-      // Batas ditegakkan multer, sebelum apa pun ditulis ke disk.
+      // Batas ditegakkan multer, sebelum berkas diunggah ke object storage.
       storage: memoryStorage(),
       limits: { fileSize: 1000000 },
     }),
   )
   async image(
-    @Req() req,
     @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
     file: Express.Multer.File,
   ) {
-    const filename = await saveImage(file.buffer, 'public/uploads/image');
+    const key = await this.storage.upload(file.buffer, 'image');
 
-    const protocol = req.protocol;
-    const host = req.get('Host');
+    // imageUrl menampung URL apa saja, termasuk alamat eksternal, jadi yang disimpan URL utuh.
     return {
-      url: `${protocol}://${host}/uploads/image/${filename}`,
+      url: this.storage.publicUrl(key),
     };
   }
 

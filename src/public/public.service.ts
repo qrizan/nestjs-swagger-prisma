@@ -1,11 +1,15 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { StorageService } from 'src/storage/storage.service';
 import { parseCursor } from 'src/utils/cursor';
 
 @Injectable()
 export class PublicService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageService,
+  ) {}
 
   async getAllGames(cursor: string, keyword: string) {
     const LIMIT = 10;
@@ -166,7 +170,16 @@ export class PublicService {
 
     return {
       statusCode: HttpStatus.OK,
-      data: getDataGameBySlug,
+      data: {
+        ...getDataGameBySlug,
+        bookmarkedBy: getDataGameBySlug.bookmarkedBy.map((bookmark) => ({
+          ...bookmark,
+          user: {
+            ...bookmark.user,
+            avatar: this.storage.publicUrl(bookmark.user.avatar),
+          },
+        })),
+      },
     };
   }
 }

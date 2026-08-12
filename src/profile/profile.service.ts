@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { StorageService } from 'src/storage/storage.service';
 import { UpdateUserDto } from 'src/profile/dto/update-user.dto';
 import * as sanitizeHtml from 'sanitize-html';
 import { hash } from 'bcrypt';
@@ -13,7 +14,10 @@ import { parseCursor } from 'src/utils/cursor';
 
 @Injectable()
 export class ProfileService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageService,
+  ) {}
 
   async getUserProfile(id: string, cursor: string) {
     const LIMIT = 4;
@@ -78,7 +82,10 @@ export class ProfileService {
 
     return {
       statusCode: HttpStatus.OK,
-      data: getDataUserById,
+      data: {
+        ...getDataUserById,
+        avatar: this.storage.publicUrl(getDataUserById.avatar),
+      },
       nextCursor: nextCursor,
     };
   }

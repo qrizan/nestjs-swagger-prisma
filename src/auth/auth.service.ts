@@ -5,10 +5,7 @@ import { compare, hash } from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as sanitizeHtml from 'sanitize-html';
-import {
-  DEFAULT_AVATAR_KEY,
-  StorageService,
-} from 'src/storage/storage.service';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +19,7 @@ export class AuthService {
     data.username = sanitizeHtml(data.username).trim();
     data.email = sanitizeHtml(data.email).trim();
     data.password = await hash(sanitizeHtml(data.password).trim(), 12);
-    data.avatar = DEFAULT_AVATAR_KEY;
+    data.avatar = await this.storage.ensureDefaultAvatar();
 
     const checkUserExists = await this.prisma.user.findFirst({
       where: {

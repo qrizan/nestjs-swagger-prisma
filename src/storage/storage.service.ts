@@ -3,13 +3,13 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
-export const DEFAULT_AVATAR_KEY = 'avatar/default.png';
+const DEFAULT_AVATAR_KEY = 'avatar/default.png';
 
 /** Relatif terhadap `dist/storage`, jadi menunjuk `public/` di samping `dist/`. */
 const DEFAULT_AVATAR_FILE = join(
@@ -29,10 +29,11 @@ const IMAGE_SIGNATURES = [
 ] as const;
 
 @Injectable()
-export class StorageService implements OnModuleInit {
+export class StorageService {
   private readonly client: S3Client;
   private readonly bucket: string;
   private readonly publicBaseUrl: string;
+  private defaultAvatarReady = false;
 
   constructor(config: ConfigService) {
     this.bucket = config.get<string>('S3_BUCKET');
@@ -51,11 +52,15 @@ export class StorageService implements OnModuleInit {
   }
 
   /**
-   * Avatar default dirujuk tiap baris pengguna baru, jadi objeknya harus ada di
-   * bucket sebelum registrasi pertama. Diunggah di sini supaya tidak jadi langkah
-   * manual yang terulang di tiap target deploy.
+   * Dipanggil saat registrasi, bukan saat start, supaya proses tetap bisa naik
+   * tanpa object storage. Hasilnya di-cache di memori: pemeriksaan hanya sekali
+   * per proses, registrasi berikutnya tidak menyentuh jaringan.
    */
-  async onModuleInit() {
+  async ensureDefaultAvatar(): Promise<string> {
+    if (this.defaultAvatarReady) {
+      return DEFAULT_AVATAR_KEY;
+    }
+
     try {
       await this.client.send(
         new HeadObjectCommand({
@@ -63,21 +68,23 @@ export class StorageService implements OnModuleInit {
           Key: DEFAULT_AVATAR_KEY,
         }),
       );
-      return;
     } catch (error) {
       if (error?.$metadata?.httpStatusCode !== 404) {
         throw error;
       }
+
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: DEFAULT_AVATAR_KEY,
+          Body: await readFile(DEFAULT_AVATAR_FILE),
+          ContentType: 'image/png',
+        }),
+      );
     }
 
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: DEFAULT_AVATAR_KEY,
-        Body: await readFile(DEFAULT_AVATAR_FILE),
-        ContentType: 'image/png',
-      }),
-    );
+    this.defaultAvatarReady = true;
+    return DEFAULT_AVATAR_KEY;
   }
 
   /** Mengunggah setelah isi berkas diperiksa. Nama objek dari server, bukan dari klien. */

@@ -103,9 +103,18 @@ jobs:
             [ "$(docker inspect -f '{{.State.Health.Status}}' postgres)" = healthy ] && break
             sleep 2
           done
+          # Enam variabel S3 wajib ada supaya validasi env lolos. Tidak ada yang
+          # menghubungi endpoint ini: object storage baru disentuh saat unggah
+          # atau registrasi, sedangkan langkah ini hanya memanggil /health/live.
           docker run -d --name api --network release-check -p 3000:3000 \
             -e DATABASE_URL='postgresql://games:games@postgres:5432/games?schema=public' \
             -e JWT_SECRET="$JWT_SECRET" \
+            -e S3_ENDPOINT='http://garage:3900' \
+            -e S3_REGION='garage' \
+            -e S3_BUCKET='assets' \
+            -e S3_ACCESS_KEY_ID='release-check' \
+            -e S3_SECRET_ACCESS_KEY='release-check' \
+            -e S3_PUBLIC_BASE_URL='http://assets.localhost' \
             "${IMAGE}:ci"
           for _ in $(seq 30); do
             if curl -fsS http://localhost:3000/health/live >/dev/null; then
